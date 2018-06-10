@@ -1,12 +1,12 @@
-Attribute VB_Name = "SummarySheetExtension"
+Attribute VB_Name = "IndexSheetExtension"
 Option Explicit
 
 'handles click on F5-Key
 Public Sub handleF5Click()
-    If Application.ActiveSheet.Name <> getSummarySheetName() Then
+    If Application.ActiveSheet.Name <> getIndexSheetName() Then
         ShowPropEditForm
     Else
-        Call generateSummaryWorksheet
+        Call generateIndexWorksheet
     End If
 End Sub
 
@@ -34,20 +34,20 @@ Public Function getWorksheetCreatedDatePropName() As String
     getWorksheetCreatedDatePropName = prop
 End Function
 
-'get name of properties which are shown in the summary sheet
-Public Function getSummaryColumns() As Variant
+'get name of properties which are shown in the index sheet
+Public Function getIndexColumns() As Variant
     Dim props As String
     props = ""
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "SummaryColumns") = "" Then
+        If getProperty(ThisWorkbook.Worksheets(1), "IndexColumns") = "" Then
             If isGermanGUI() Then
                 props = "Tabelle;Datum;Beschreibung;Verantwortlich;ToDo;Status;Info"
             Else
                 props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
             End If
         Else
-            props = getProperty(ThisWorkbook.Worksheets(1), "SummaryColumns")
+            props = getProperty(ThisWorkbook.Worksheets(1), "IndexColumns")
         End If
     If Err.Number > 0 Then
         props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
@@ -56,28 +56,28 @@ Public Function getSummaryColumns() As Variant
     On Error GoTo 0
             
     'first column has to be for the hyperlink to the other worksheets, first array entry should not be an existing custom property
-    If (inArray(Split(props, ";")(0), getSummaryCustomProperties()) Or Split(props, ";")(0) = getWorksheetCreatedDatePropName()) Then
+    If (inArray(Split(props, ";")(0), getIndexCustomProperties()) Or Split(props, ";")(0) = getWorksheetCreatedDatePropName()) Then
         props = ";" & props
     End If
     
-    getSummaryColumns = Split(props, ";")
+    getIndexColumns = Split(props, ";")
     
 End Function
 
 'get name of custom proprties which should be created in all worksheets
-Public Function getSummaryCustomProperties() As Variant
+Public Function getIndexCustomProperties() As Variant
     Dim props As String
     props = ""
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "SummaryCustomProperties") = "" Then
+        If getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties") = "" Then
             If isGermanGUI() Then
                 props = "Beschreibung;Verantwortlich;ToDo;Status;Info;Datum"
             Else
                 props = "Description;Responsible;ToDo;Status;Info;Created"
             End If
         Else
-            props = getProperty(ThisWorkbook.Worksheets(1), "SummaryCustomProperties")
+            props = getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties")
         End If
     If Err.Number > 0 Then
         props = "Description;Responsible;ToDo;Status;Info;Created"
@@ -85,34 +85,34 @@ Public Function getSummaryCustomProperties() As Variant
     End If
     On Error GoTo 0
     
-    getSummaryCustomProperties = Split(props, ";")
+    getIndexCustomProperties = Split(props, ";")
 End Function
 
-'get the defined name for the summary worksheet
-Public Function getSummarySheetName() As String
+'get the defined name for the index worksheet
+Public Function getIndexSheetName() As String
     Dim sumsheet As String
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "SummaryWorksheetName") = "" Then
+        If getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName") = "" Then
             If isGermanGUI() Then
                 sumsheet = "Uebersicht"
             Else
-                sumsheet = "summary"
+                sumsheet = "Index"
             End If
         Else
-            sumsheet = getProperty(ThisWorkbook.Worksheets(1), "SummaryWorksheetName")
+            sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
         End If
     If Err.Number > 0 Then
-        sumsheet = "summary"
+        sumsheet = "Index"
         Err.Clear
     End If
     On Error GoTo 0
-    getSummarySheetName = sumsheet
+    getIndexSheetName = sumsheet
 End Function
 
 
 'genereates new sheet for overview
-Public Sub generateSummaryWorksheet()
+Public Sub generateIndexWorksheet()
     Dim Sh As Worksheet
     Dim Newsh As Worksheet
     
@@ -132,12 +132,12 @@ Public Sub generateSummaryWorksheet()
     Set Basebook = ActiveWorkbook
     Set Basesheet = ActiveWorkbook.ActiveSheet
     
-    If Not worksheetExists(ActiveWorkbook, getSummarySheetName()) Then
-        'Add a worksheet with the name "Summary-Sheet"
+    If Not worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
+        'Add a worksheet with the name "Index-Sheet"
         Set Newsh = Basebook.Worksheets.Add(Before:=Basebook.Worksheets(1))
-        Newsh.Name = getSummarySheetName()
+        Newsh.Name = getIndexSheetName()
      Else
-        Set Newsh = Basebook.Worksheets(getSummarySheetName())
+        Set Newsh = Basebook.Worksheets(getIndexSheetName())
     End If
     
     Newsh.Cells.Clear
@@ -149,8 +149,8 @@ Public Sub generateSummaryWorksheet()
     Application.DisplayAlerts = True
   
     'Add headers
-    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(getSummaryColumns())))
-        .Value = getSummaryColumns()
+    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(getIndexColumns())))
+        .Value = getIndexColumns()
         .Font.Bold = True
         .Font.Size = 12
     End With
@@ -166,8 +166,8 @@ Public Sub generateSummaryWorksheet()
             'Create a link to the sheet in the A column
             Newsh.Hyperlinks.Add Anchor:=Newsh.Cells(RwNum, 1), Address:="", SubAddress:="'" & Sh.Name & "'!A1", ScreenTip:="Direkt zur Liste springen", TextToDisplay:=Sh.Name
 
-            For Each col In getSummaryColumns()
-                If CStr(col) <> "" And CStr(col) <> CStr(getSummaryColumns(0)) Then
+            For Each col In getIndexColumns()
+                If CStr(col) <> "" And CStr(col) <> CStr(getIndexColumns(0)) Then
                     ColNum = ColNum + 1
                     Newsh.Cells(RwNum, ColNum) = getProperty(Sh, CStr(col))
                 End If
@@ -182,7 +182,7 @@ Public Sub generateSummaryWorksheet()
     Set rng = Newsh.UsedRange
     Set tbl = Newsh.ListObjects.Add(xlSrcRange, rng, , xlYes)
     tbl.TableStyle = "TableStyleMedium15"
-    tbl.Name = getSummarySheetName()
+    tbl.Name = getIndexSheetName()
     With rng
      With .Borders(xlEdgeBottom)
             .LineStyle = xlContinuous

@@ -31,14 +31,16 @@ Private Sub btnCancel_Click()
 End Sub
 
 Private Sub btnConfig_Click()
-    SummarySheetExtensionForm.Show
+    Call cbProperty_Change
+    Me.Hide
+    IndexSheetExtensionForm.Show
 End Sub
 
 'handles click on btnOK
 Private Sub btnOk_Click()
     setProperty ws, Me.cbProperty.Text, Me.txtValue.Text
     Me.Hide
-    Call generateSummaryWorksheet
+    Call generateIndexWorksheet
 End Sub
 
 'handles change of selected property
@@ -82,12 +84,12 @@ Private Sub UserForm_Activate()
     Next xx
     
     'add default properties to combobox.list (if they are not already set)
-    For Each tmp In getSummaryCustomProperties()
+    For Each tmp In getIndexCustomProperties()
         If isInList(Me.cbProperty, CStr(tmp)) = False Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
     'default property is first one defined
-    Me.cbProperty.Text = CStr(getSummaryCustomProperties(0))
+    Me.cbProperty.Text = CStr(getIndexCustomProperties(0))
     
     'caption of form (sheet/workbook in it)
     Me.Caption = "Edit custom properties of [" & ws.Parent.Name & "].[" & ws.Name & "]"

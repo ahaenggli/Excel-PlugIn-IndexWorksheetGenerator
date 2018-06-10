@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "SummarySheetAppEventHandler"
+Attribute VB_Name = "IndexSheetAppEventHandler"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -13,12 +13,12 @@ Option Explicit
 Private WithEvents AppEvent As Application
 Attribute AppEvent.VB_VarHelpID = -1
 
-'handles changes in the summary sheet (update custom properties if edited manually)
+'handles changes in the index sheet (update custom properties if edited manually)
 Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-    'is change in the summary sheet?
-    If Sh.Name = getSummarySheetName() Then
+    'is change in the index sheet?
+    If Sh.Name = getIndexSheetName() Then
     'is there already a table? If not -> just exit sub
     If Sh.ListObjects.Count = 0 Then Exit Sub
     
@@ -59,8 +59,8 @@ Private Sub AppEvent_WorkbookNewSheet(ByVal wb As Workbook, ByVal Sh As Object)
     'set a custom property for the new worksheet
     setProperty Sh, getWorksheetCreatedDatePropName(), Now
      
-    If worksheetExists(wb, getSummarySheetName()) Then
-        Call generateSummaryWorksheet
+    If worksheetExists(wb, getIndexSheetName()) Then
+        Call generateIndexWorksheet
     End If
     
 End Sub
