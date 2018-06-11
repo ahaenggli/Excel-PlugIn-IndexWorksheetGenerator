@@ -32,7 +32,8 @@ Dim id, tmp As Integer
 Dim xx As CustomProperty
 
     If ws Is Nothing Then
-        Set ws = Application.ActiveSheet
+      getPropId = 0
+      Exit Function
     End If
  
     If propName = "" Then
@@ -51,12 +52,23 @@ Next xx
 getPropId = id
 End Function
 
+'rename and overwrite property
+Public Sub propertyRename(wb As Workbook, propNameOld As String, propNameNew As String)
+    Dim ws As Worksheet
+    For Each ws In wb.Worksheets
+        Call setProperty(ws, propNameNew, getProperty(ws, propNameOld))
+        Call setProperty(ws, propNameOld, "")
+    Next ws
+End Sub
+
 ' get value of custom property by name, default propName is "Tag"
 Public Function getProperty(Optional ws As Worksheet, Optional propName As String) As String
 Dim propId As Integer
 
  If ws Is Nothing Then
-    Set ws = Application.ActiveSheet
+    'Set ws = Application.ActiveSheet
+    getProperty = ""
+    Exit Function
  End If
  
  If propName = "" Then
@@ -79,7 +91,8 @@ Public Sub setProperty(Optional ws As Worksheet, Optional propName As String, Op
 Dim propId As Integer
     
     If ws Is Nothing Then
-        Set ws = Application.ActiveSheet
+        'Set ws = Application.ActiveSheet
+        MsgBox "nothing"
     End If
     
     If propName = "" Then
@@ -99,6 +112,6 @@ End Sub
 
 'Open PropertyExtensionForm to edit or add properties on a sheet
 Public Sub ShowPropEditForm()
-    PropertyExtensionForm.setSheet Application.ActiveSheet
+    PropertyExtensionForm.setSheet ActiveWorkbook.ActiveSheet
     PropertyExtensionForm.Show
 End Sub

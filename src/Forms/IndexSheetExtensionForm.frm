@@ -16,11 +16,11 @@ Attribute VB_Exposed = False
 
 Private Sub btnOk_Click()
     Call saveSettings
-    Me.Hide
+    Unload Me
 End Sub
 
 Private Sub CommandButton1_Click()
-    Me.Hide
+    Unload Me
 End Sub
 
 Private Sub UserForm_Activate()
@@ -28,9 +28,32 @@ Private Sub UserForm_Activate()
     txtProperties.Text = Join(getIndexCustomProperties(), ";")
     txtSummaryColumns.Text = Join(getIndexColumns(), ";")
     txtWorkSheetCreatedDate.Text = getWorksheetCreatedDatePropName()
+        
+     If Not worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
+        Me.cbSetDefault.Value = True
+     End If
 End Sub
 
 Private Sub saveSettings()
+    
+    If Not worksheetExists(ActiveWorkbook, getIndexSheetName()) And Me.cbSetDefault.Value = False Then
+        Call generateIndexWorksheet
+    End If
+
+    If worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
+    setProperty ActiveWorkbook.Worksheets(1), "IndexWorksheetName", txtSumTitel.Text
+    setProperty ActiveWorkbook.Worksheets(1), "IndexCustomProperties", txtProperties.Text
+    setProperty ActiveWorkbook.Worksheets(1), "IndexColumns", txtSummaryColumns.Text
+    setProperty ActiveWorkbook.Worksheets(1), "WorksheetCreatedDatePropName", txtWorkSheetCreatedDate.Text
+        
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    ActiveWorkbook.Save
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    End If
+    
+    If Me.cbSetDefault.Value = True Then
     
     'save "global"-properties in ThisWorkbook.Worksheets(1)
     ' -> ThisWorkbook is where the code is saved (xlam-file)
@@ -46,6 +69,9 @@ Private Sub saveSettings()
     ThisWorkbook.Save
     Application.DisplayAlerts = True
     On Error GoTo 0
+    
+    End If
+    
 End Sub
 
 Private Sub UserForm_Terminate()

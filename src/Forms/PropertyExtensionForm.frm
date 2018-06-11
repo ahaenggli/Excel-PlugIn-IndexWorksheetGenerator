@@ -7,17 +7,18 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} PropertyExtensionForm
    ClientWidth     =   6555
    OleObjectBlob   =   "PropertyExtensionForm.frx":0000
    StartUpPosition =   1  'Fenstermitte
+   WhatsThisHelp   =   -1  'True
 End
 Attribute VB_Name = "PropertyExtensionForm"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Option Explicit
 
 'reference to opend sheet
 Private ws As Worksheet
+
 'old value of combobox
 Private oldValue As String
 
@@ -27,20 +28,20 @@ Public Sub setSheet(actSheet As Worksheet)
 End Sub
 
 Private Sub btnCancel_Click()
-    Me.Hide
+    Unload Me
 End Sub
 
 Private Sub btnConfig_Click()
     Call cbProperty_Change
-    Me.Hide
     IndexSheetExtensionForm.Show
+    Unload Me
 End Sub
 
 'handles click on btnOK
 Private Sub btnOk_Click()
     setProperty ws, Me.cbProperty.Text, Me.txtValue.Text
-    Me.Hide
     Call generateIndexWorksheet
+    Unload Me
 End Sub
 
 'handles change of selected property
@@ -72,20 +73,28 @@ Private Sub UserForm_Activate()
     Dim tmp As Variant
     
     oldValue = ""
-    If ws Is Nothing Then Set ws = Application.ActiveSheet
+    If ws Is Nothing Then Set ws = ActiveWorkbook.ActiveSheet
     If ws Is Nothing Then Exit Sub
+    
+    ws.Parent.Activate
+    ws.Activate
     
     Me.cbProperty.Clear
     Me.txtValue.Text = ""
     
     'add existising properties to combobox.list
     For Each xx In ws.CustomProperties
-        Me.cbProperty.AddItem xx.Name
+      If xx.Name <> "isIndex" Then Me.cbProperty.AddItem xx.Name
     Next xx
     
     'add default properties to combobox.list (if they are not already set)
     For Each tmp In getIndexCustomProperties()
-        If isInList(Me.cbProperty, CStr(tmp)) = False Then Me.cbProperty.AddItem CStr(tmp)
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" Then Me.cbProperty.AddItem CStr(tmp)
+    Next tmp
+    
+    'add index properties to combobox.list (if they are not already set)
+    For Each tmp In getIndexColumns()
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And tmp <> getIndexColumns(0) Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
     'default property is first one defined

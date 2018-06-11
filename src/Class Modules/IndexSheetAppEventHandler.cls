@@ -15,6 +15,8 @@ Attribute AppEvent.VB_VarHelpID = -1
 
 'handles changes in the index sheet (update custom properties if edited manually)
 Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
+If Not TypeOf Sh Is Worksheet Then Exit Sub
+
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
     'is change in the index sheet?
@@ -26,8 +28,17 @@ Application.DisplayAlerts = False
             If Intersect(Target, Sh.Range(Sh.ListObjects(1).Range.Address)) Is Nothing Then Exit Sub
             For Each cl In Intersect(Target, Sh.Range(Sh.ListObjects(1).Range.Address))
             On Error Resume Next
-            'first row are just headers -> skip
-            If cl.Row = 1 Then GoTo Skip
+            'first row are headers -> rename property
+            If cl.Row = 1 Then
+                If getIndexColumns(cl.Column - 1) <> cl.Value Then
+                    Call propertyRename(Sh.Parent, CStr(getIndexColumns(cl.Column - 1)), cl.Value)
+                End If
+            Dim arr As Variant
+            arr = getIndexColumns()
+            arr(cl.Column - 1) = cl.Value
+            setProperty Sh, "IndexColumns", Join(arr, ";")
+            GoTo Skip
+            End If
             'first column is just hyperlink to other worksheets -> skip
             If cl.Column = 1 Then GoTo Skip
 
@@ -50,15 +61,25 @@ End Sub
 
 ' New WorkBook added in Application: with it also the first WorkSheet was created
 Private Sub AppEvent_NewWorkbook(ByVal wb As Workbook)
-    'set a custom property for the first worksheet
+    
+   'set a custom property for the first worksheet
+   If getWorksheetCreatedDatePropName() <> "" Then
     setProperty wb.Sheets(1), getWorksheetCreatedDatePropName(), Now
+   End If
+   
+   setProperty wb.Sheets(1), "isIndex", "0"
 End Sub
 
 ' new WorkSheet added
 Private Sub AppEvent_WorkbookNewSheet(ByVal wb As Workbook, ByVal Sh As Object)
+If Not TypeOf Sh Is Worksheet Then Exit Sub
     'set a custom property for the new worksheet
+   If getWorksheetCreatedDatePropName() <> "" Then
     setProperty Sh, getWorksheetCreatedDatePropName(), Now
-     
+   End If
+   
+   setProperty Sh, "isIndex", "0"
+   
     If worksheetExists(wb, getIndexSheetName()) Then
         Call generateIndexWorksheet
     End If

@@ -3,8 +3,8 @@ Option Explicit
 
 'handles click on F5-Key
 Public Sub handleF5Click()
-    If Application.ActiveSheet.Name <> getIndexSheetName() Then
-        ShowPropEditForm
+    If ActiveWorkbook.ActiveSheet.Name <> getIndexSheetName() Then
+        Call ShowPropEditForm
     Else
         Call generateIndexWorksheet
     End If
@@ -16,14 +16,14 @@ Public Function getWorksheetCreatedDatePropName() As String
     prop = ""
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName") = "" Then
+        If isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName")) = "" Then
             If isGermanGUI() Then
                 prop = "Datum"
             Else
                 prop = "Created"
             End If
         Else
-            prop = getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName")
+            prop = isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName"))
         End If
     If Err.Number > 0 Then
         prop = "Created"
@@ -40,14 +40,14 @@ Public Function getIndexColumns() As Variant
     props = ""
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "IndexColumns") = "" Then
+        If isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns")) = "" Then
             If isGermanGUI() Then
                 props = "Tabelle;Datum;Beschreibung;Verantwortlich;ToDo;Status;Info"
             Else
                 props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
             End If
         Else
-            props = getProperty(ThisWorkbook.Worksheets(1), "IndexColumns")
+            props = isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns"))
         End If
     If Err.Number > 0 Then
         props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
@@ -70,14 +70,14 @@ Public Function getIndexCustomProperties() As Variant
     props = ""
     
     On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties") = "" Then
+        If isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties")) = "" Then
             If isGermanGUI() Then
                 props = "Beschreibung;Verantwortlich;ToDo;Status;Info;Datum"
             Else
                 props = "Description;Responsible;ToDo;Status;Info;Created"
             End If
         Else
-            props = getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties")
+            props = isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties"))
         End If
     If Err.Number > 0 Then
         props = "Description;Responsible;ToDo;Status;Info;Created"
@@ -88,28 +88,58 @@ Public Function getIndexCustomProperties() As Variant
     getIndexCustomProperties = Split(props, ";")
 End Function
 
+'set flag for index sheet
+Public Sub setIndexSheetFlag(ws As Worksheet)
+    Dim Sheet As Worksheet
+
+    For Each Sheet In ActiveWorkbook.Worksheets
+        setProperty Sheet, "isIndex", "0"
+    Next Sheet
+
+    setProperty ws, "isIndex", "1"
+End Sub
+
 'get the defined name for the index worksheet
 Public Function getIndexSheetName() As String
+    Dim ws As Worksheet
     Dim sumsheet As String
+    sumsheet = ""
     
-    On Error Resume Next
-        If getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName") = "" Then
-            If isGermanGUI() Then
-                sumsheet = "Uebersicht"
-            Else
-                sumsheet = "Index"
-            End If
-        Else
-            sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
+    For Each ws In ActiveWorkbook.Worksheets
+        If (getProperty(ws, "isIndex") = "1") Then
+            sumsheet = ws.Name
+            Exit For
         End If
-    If Err.Number > 0 Then
-        sumsheet = "Index"
-        Err.Clear
+    Next ws
+    
+    If sumsheet = "" Then
+        On Error Resume Next
+            If getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName") = "" Then
+                If isGermanGUI() Then
+                    sumsheet = "Uebersicht"
+                Else
+                    sumsheet = "Index"
+                End If
+            Else
+                sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
+            End If
+        If Err.Number > 0 Then
+            sumsheet = "Index"
+            Err.Clear
+        End If
+        On Error GoTo 0
     End If
-    On Error GoTo 0
     getIndexSheetName = sumsheet
 End Function
 
+'returns ref to index sheet if exists, else nothing
+Public Function getIndexSheet() As Worksheet
+    If worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
+        Set getIndexSheet = ActiveWorkbook.Worksheets(getIndexSheetName())
+    Else
+        Set getIndexSheet = Nothing
+    End If
+End Function
 
 'genereates new sheet for overview
 Public Sub generateIndexWorksheet()
@@ -146,6 +176,8 @@ Public Sub generateIndexWorksheet()
         Newsh.ListObjects(0).Delete
     End If
     
+    Call setIndexSheetFlag(Newsh)
+        
     Application.DisplayAlerts = True
   
     'Add headers

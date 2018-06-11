@@ -16,10 +16,10 @@ Select Case Application.LanguageSettings.LanguageID(msoLanguageIDUI)
 End Function
 
 'check whether a value is in an array of values or not
-Public Function inArray(Value As Variant, Arr As Variant) As Boolean
+Public Function inArray(Value As Variant, arr As Variant) As Boolean
     Dim tmpValue As Variant
 On Error GoTo ErrorHandler: 'array is empty
-    For Each tmpValue In Arr
+    For Each tmpValue In arr
         If tmpValue = Value Then
             inArray = True
             Exit Function
