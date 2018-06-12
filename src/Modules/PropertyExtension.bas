@@ -26,18 +26,14 @@ Private Sub delAllProps()
     ThisWorkbook.RemovePersonalInformation = True
 End Sub
 
-' get id of custom property by name, default propName is "Tag"
+' get id of custom property by name
 Private Function getPropId(Optional ws As Worksheet, Optional propName As String) As Integer
 Dim id, tmp As Integer
 Dim xx As CustomProperty
 
-    If ws Is Nothing Then
+    If ws Is Nothing Or propName = "" Then
       getPropId = 0
       Exit Function
-    End If
- 
-    If propName = "" Then
-       propName = "Tag"
     End If
  
 id = 0
@@ -65,14 +61,9 @@ End Sub
 Public Function getProperty(Optional ws As Worksheet, Optional propName As String) As String
 Dim propId As Integer
 
- If ws Is Nothing Then
-    'Set ws = Application.ActiveSheet
+ If ws Is Nothing Or propName = "" Then
     getProperty = ""
     Exit Function
- End If
- 
- If propName = "" Then
-    propName = "Tag"
  End If
  
  propId = getPropId(ws, propName)
@@ -90,23 +81,19 @@ End Function
 Public Sub setProperty(Optional ws As Worksheet, Optional propName As String, Optional propVal As String)
 Dim propId As Integer
     
-    If ws Is Nothing Then
-        'Set ws = Application.ActiveSheet
-        MsgBox "nothing"
+    If ws Is Nothing Or propName = "" Then
+        Exit Sub
     End If
     
-    If propName = "" Then
-        propName = "Tag"
+    propId = getPropId(ws, propName)
+
+    'delete if exists
+    If propId > 0 Then
+        ws.CustomProperties.Item(propId).Delete
     End If
-    
-propId = getPropId(ws, propName)
 
-If propId > 0 Then
-    ws.CustomProperties.Item(propId).Delete
-End If
-
- ' Add metadata to worksheet.
- If propVal <> "" Then ws.CustomProperties.Add Name:=propName, Value:=propVal
+    ' Add metadata to worksheet.
+    If propVal <> "" Then ws.CustomProperties.Add Name:=propName, Value:=propVal
  
 End Sub
 

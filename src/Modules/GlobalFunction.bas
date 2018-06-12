@@ -31,6 +31,26 @@ On Error GoTo 0
     inArray = False
 End Function
 
+'check whether a value is in an array of values or not
+Public Function getIndexInArray(Value As Variant, arr As Variant) As Integer
+    Dim tmpValue As Variant
+    Dim idx As Integer
+    idx = 0
+    
+On Error GoTo ErrorHandler: 'array is empty
+    For Each tmpValue In arr
+        If tmpValue = Value Then
+            getIndexInArray = idx
+            Exit Function
+        End If
+    idx = idx + 1
+    Next tmpValue
+Exit Function
+ErrorHandler:
+On Error GoTo 0
+    getIndexInArray = -1
+End Function
+
 ' replaces empty string with alternative string
 Public Function isNull(val1 As String, val2 As String) As String
     If val1 <> "" Then

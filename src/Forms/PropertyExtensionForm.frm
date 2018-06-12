@@ -89,12 +89,12 @@ Private Sub UserForm_Activate()
     
     'add default properties to combobox.list (if they are not already set)
     For Each tmp In getIndexCustomProperties()
-        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" Then Me.cbProperty.AddItem CStr(tmp)
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
     'add index properties to combobox.list (if they are not already set)
     For Each tmp In getIndexColumns()
-        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And tmp <> getIndexColumns(0) Then Me.cbProperty.AddItem CStr(tmp)
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And tmp <> getIndexColumns(0) And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
     'default property is first one defined

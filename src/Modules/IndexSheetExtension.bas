@@ -1,13 +1,16 @@
 Attribute VB_Name = "IndexSheetExtension"
 Option Explicit
+Public isF5 As Boolean
 
 'handles click on F5-Key
 Public Sub handleF5Click()
+    isF5 = True
     If ActiveWorkbook.ActiveSheet.Name <> getIndexSheetName() Then
         Call ShowPropEditForm
     Else
         Call generateIndexWorksheet
     End If
+    isF5 = False
 End Sub
 
 'get the name for the worksheet created field (custom property)
@@ -16,15 +19,10 @@ Public Function getWorksheetCreatedDatePropName() As String
     prop = ""
     
     On Error Resume Next
-        If isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName")) = "" Then
-            If isGermanGUI() Then
-                prop = "Datum"
-            Else
-                prop = "Created"
-            End If
-        Else
-            prop = isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName"))
-        End If
+    If prop = "" Then prop = isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName"))
+    If prop = "" And isGermanGUI() Then prop = "Datum"
+    If prop = "" And Not isGermanGUI() Then prop = "Created"
+
     If Err.Number > 0 Then
         prop = "Created"
         Err.Clear
@@ -40,15 +38,10 @@ Public Function getIndexColumns() As Variant
     props = ""
     
     On Error Resume Next
-        If isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns")) = "" Then
-            If isGermanGUI() Then
-                props = "Tabelle;Datum;Beschreibung;Verantwortlich;ToDo;Status;Info"
-            Else
-                props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
-            End If
-        Else
-            props = isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns"))
-        End If
+    If props = "" Then props = isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns"))
+    If props = "" And isGermanGUI() Then props = "Blatt;Datum;Beschreibung;Verantwortlich;ToDo;Status;Info"
+    If props = "" And Not isGermanGUI() Then props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
+
     If Err.Number > 0 Then
         props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
         Err.Clear
@@ -61,7 +54,6 @@ Public Function getIndexColumns() As Variant
     End If
     
     getIndexColumns = Split(props, ";")
-    
 End Function
 
 'get name of custom proprties which should be created in all worksheets
@@ -70,15 +62,10 @@ Public Function getIndexCustomProperties() As Variant
     props = ""
     
     On Error Resume Next
-        If isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties")) = "" Then
-            If isGermanGUI() Then
-                props = "Beschreibung;Verantwortlich;ToDo;Status;Info;Datum"
-            Else
-                props = "Description;Responsible;ToDo;Status;Info;Created"
-            End If
-        Else
-            props = isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties"))
-        End If
+    If props = "" Then props = isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties"))
+    If props = "" And isGermanGUI() Then props = "Beschreibung;Verantwortlich;ToDo;Status;Info;Datum"
+    If props = "" And Not isGermanGUI() Then props = "Description;Responsible;ToDo;Status;Info;Created"
+    
     If Err.Number > 0 Then
         props = "Description;Responsible;ToDo;Status;Info;Created"
         Err.Clear
@@ -112,30 +99,26 @@ Public Function getIndexSheetName() As String
         End If
     Next ws
     
-    If sumsheet = "" Then
-        On Error Resume Next
-            If getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName") = "" Then
-                If isGermanGUI() Then
-                    sumsheet = "Uebersicht"
-                Else
-                    sumsheet = "Index"
-                End If
-            Else
-                sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
-            End If
-        If Err.Number > 0 Then
-            sumsheet = "Index"
-            Err.Clear
-        End If
-        On Error GoTo 0
+    On Error Resume Next
+    If sumsheet = "" Then sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
+    If sumsheet = "" And isGermanGUI() Then sumsheet = "Uebersicht"
+    If sumsheet = "" And Not isGermanGUI() Then sumsheet = "Index"
+               
+    If Err.Number > 0 Then
+        sumsheet = "Index"
+        Err.Clear
     End If
+    On Error GoTo 0
+    
     getIndexSheetName = sumsheet
 End Function
 
 'returns ref to index sheet if exists, else nothing
 Public Function getIndexSheet() As Worksheet
-    If worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
-        Set getIndexSheet = ActiveWorkbook.Worksheets(getIndexSheetName())
+    Dim idx As String
+    idx = getIndexSheetName()
+    If worksheetExists(ActiveWorkbook, idx) Then
+        Set getIndexSheet = ActiveWorkbook.Worksheets(idx)
     Else
         Set getIndexSheet = Nothing
     End If
@@ -149,10 +132,13 @@ Public Sub generateIndexWorksheet()
     Dim Basebook As Workbook
     Dim Basesheet As Worksheet
     
-    Dim myCell As Range
     Dim RwNum, ColNum As Integer
     Dim col As Variant
-        
+    
+    Dim TableStyle As String
+    Dim IndexSheetName As String
+    Dim IndexColumns As Variant
+    
     With Application
         .Calculation = xlCalculationManual
         .ScreenUpdating = False
@@ -162,27 +148,33 @@ Public Sub generateIndexWorksheet()
     Set Basebook = ActiveWorkbook
     Set Basesheet = ActiveWorkbook.ActiveSheet
     
-    If Not worksheetExists(ActiveWorkbook, getIndexSheetName()) Then
+    IndexSheetName = getIndexSheetName()
+    IndexColumns = getIndexColumns()
+    
+    If Not worksheetExists(ActiveWorkbook, IndexSheetName) Then
         'Add a worksheet with the name "Index-Sheet"
         Set Newsh = Basebook.Worksheets.Add(Before:=Basebook.Worksheets(1))
-        Newsh.Name = getIndexSheetName()
+        Newsh.Name = IndexSheetName
      Else
-        Set Newsh = Basebook.Worksheets(getIndexSheetName())
+        Set Newsh = Basebook.Worksheets(IndexSheetName)
+    End If
+    
+    If Newsh.ListObjects.Count > 0 Then
+        TableStyle = Newsh.ListObjects(1).TableStyle
+        Newsh.ListObjects(1).Delete
     End If
     
     Newsh.Cells.Clear
     Newsh.Cells.Delete
-    If Newsh.ListObjects.Count > 0 Then
-        Newsh.ListObjects(0).Delete
-    End If
+
     
     Call setIndexSheetFlag(Newsh)
         
     Application.DisplayAlerts = True
   
     'Add headers
-    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(getIndexColumns())))
-        .Value = getIndexColumns()
+    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(IndexColumns)))
+        .Value = IndexColumns
         .Font.Bold = True
         .Font.Size = 12
     End With
@@ -196,10 +188,10 @@ Public Sub generateIndexWorksheet()
             RwNum = RwNum + 1
                        
             'Create a link to the sheet in the A column
-            Newsh.Hyperlinks.Add Anchor:=Newsh.Cells(RwNum, 1), Address:="", SubAddress:="'" & Sh.Name & "'!A1", ScreenTip:="Direkt zur Liste springen", TextToDisplay:=Sh.Name
+            Newsh.Hyperlinks.Add Anchor:=Newsh.Cells(RwNum, 1), Address:="", SubAddress:="'" & Sh.Name & "'!A1", ScreenTip:="", TextToDisplay:=Sh.Name
 
-            For Each col In getIndexColumns()
-                If CStr(col) <> "" And CStr(col) <> CStr(getIndexColumns(0)) Then
+            For Each col In IndexColumns
+                If CStr(col) <> "" And CStr(col) <> CStr(IndexColumns(0)) Then
                     ColNum = ColNum + 1
                     Newsh.Cells(RwNum, ColNum) = getProperty(Sh, CStr(col))
                 End If
@@ -213,8 +205,8 @@ Public Sub generateIndexWorksheet()
 
     Set rng = Newsh.UsedRange
     Set tbl = Newsh.ListObjects.Add(xlSrcRange, rng, , xlYes)
-    tbl.TableStyle = "TableStyleMedium15"
-    tbl.Name = getIndexSheetName()
+    tbl.TableStyle = isNull(TableStyle, "TableStyleMedium15")
+    tbl.Name = IndexSheetName
     With rng
      With .Borders(xlEdgeBottom)
             .LineStyle = xlContinuous

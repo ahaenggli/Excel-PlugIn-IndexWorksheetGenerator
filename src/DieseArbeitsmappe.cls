@@ -24,7 +24,7 @@ Private Sub Workbook_Open()
     '' CTRL + Shift + A
     'Application.OnKey "^+{A}", "tstBox"
      Application.OnKey "{F5}", "handleF5Click"
-     
+     isF5 = False
     'init application wide event handler
      Set IndexSheetExtension_AppEventHandler = New IndexSheetAppEventHandler
        
