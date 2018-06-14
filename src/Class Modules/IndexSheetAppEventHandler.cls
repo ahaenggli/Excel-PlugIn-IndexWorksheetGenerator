@@ -83,7 +83,7 @@ For Each vl In arrCusProp
     Else
         If Not inArray(vl, arrIdxCols) And inArray(vl, getIndexColumns()) Then
             x = getIndexInArray(vl, getIndexColumns())
-            If x > -1 Then newCusProp = newCusProp + arrIdxCols(x) + ";"
+            If x > -1 And x <= UBound(arrIdxCols) Then newCusProp = newCusProp + arrIdxCols(x) + ";"
         Else
             newCusProp = newCusProp + CStr(vl) + ";"
         End If
