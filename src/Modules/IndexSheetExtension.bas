@@ -216,8 +216,20 @@ Public Sub generateIndexWorksheet()
     End With
     Newsh.UsedRange.ColumnWidth = 250
     Newsh.UsedRange.RowHeight = 250
+    Newsh.UsedRange.HorizontalAlignment = xlLeft
+    Newsh.UsedRange.VerticalAlignment = xlTop
+    
     Newsh.UsedRange.Columns.AutoFit
+    
+    For Each rng In Newsh.UsedRange.Columns
+        If rng.ColumnWidth > 75 Then
+            rng.ColumnWidth = 75
+            rng.WrapText = True
+        End If
+    Next rng
+    
     Newsh.UsedRange.Rows.AutoFit
+    
     With Application
         .Calculation = xlCalculationAutomatic
         .ScreenUpdating = True
