@@ -4,6 +4,8 @@ Public isF5 As Boolean
 
 'handles click on F5-Key
 Public Sub handleF5Click()
+    If ActiveWorkbook Is Nothing Then Exit Sub
+    
     isF5 = True
     If ActiveWorkbook.ActiveSheet.Name <> getIndexSheetName() Then
         Call ShowPropEditForm
