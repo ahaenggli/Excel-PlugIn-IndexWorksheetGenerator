@@ -139,5 +139,21 @@ cPrpNm = getWorksheetCreatedDatePropName()
     
 End Sub
 
-
-
+'refresh table of contents sheet if activated
+Private Sub AppEvent_SheetActivate(ByVal Sh As Object)
+    'not a worksheet?
+    If Not TypeOf Sh Is Worksheet Then Exit Sub
+    'not a workbook?
+    If Not TypeOf Sh.Parent Is Workbook Then Exit Sub
+    
+    'call just once
+    Dim idx As String
+    idx = getIndexSheetName()
+    
+    'there is no sheet for table of contents?
+    If Not worksheetExists(Sh.Parent, idx) Then Exit Sub
+    
+    If Sh.Name = idx Then
+     Call generateIndexWorksheet
+    End If         
+End Sub
