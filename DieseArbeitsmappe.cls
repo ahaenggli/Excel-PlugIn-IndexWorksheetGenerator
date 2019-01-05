@@ -7,12 +7,12 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
-'' Source can be found at https://github.com/ahaenggli/Excel-PlugIn-IndexWorksheetGenerator
+'' Source can be found at https://gitlab.com/haenggli.net/excel/tableofcontents-generator-addin
 
 Option Explicit
 
 'event handler for application
-Private IndexSheetExtension_AppEventHandler As IndexSheetAppEventHandler
+Private TocSheetExtension_AppEventHandler As TocSheetAppEventHandler
 
 ' Sub is called whenever AddIn is loaded
 Private Sub Workbook_Open()
@@ -26,7 +26,7 @@ Private Sub Workbook_Open()
      Application.OnKey "{F5}", "handleF5Click"
      isF5 = False
     'init application wide event handler
-     Set IndexSheetExtension_AppEventHandler = New IndexSheetAppEventHandler
+     Set TocSheetExtension_AppEventHandler = New TocSheetAppEventHandler
        
 End Sub
 

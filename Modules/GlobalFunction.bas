@@ -32,7 +32,7 @@ On Error GoTo 0
 End Function
 
 'check whether a value is in an array of values or not
-Public Function getIndexInArray(Value As Variant, arr As Variant) As Integer
+Public Function getTocInArray(Value As Variant, arr As Variant) As Integer
     Dim tmpValue As Variant
     Dim idx As Integer
     idx = 0
@@ -40,7 +40,7 @@ Public Function getIndexInArray(Value As Variant, arr As Variant) As Integer
 On Error GoTo ErrorHandler: 'array is empty
     For Each tmpValue In arr
         If tmpValue = Value Then
-            getIndexInArray = idx
+            getTocInArray = idx
             Exit Function
         End If
     idx = idx + 1
@@ -48,7 +48,7 @@ On Error GoTo ErrorHandler: 'array is empty
 Exit Function
 ErrorHandler:
 On Error GoTo 0
-    getIndexInArray = -1
+    getTocInArray = -1
 End Function
 
 ' replaces empty string with alternative string
@@ -61,11 +61,11 @@ Public Function isNull(val1 As String, val2 As String) As String
 End Function
 
 'Does the sheet exists in specific workbook?
-Public Function worksheetExists(wb As Workbook, sheetToFind As String) As Boolean
+Public Function worksheetExists(WB As Workbook, sheetToFind As String) As Boolean
     worksheetExists = False
     Dim Sheet As Worksheet
     
-    For Each Sheet In wb.Worksheets
+    For Each Sheet In WB.Worksheets
         If sheetToFind = Sheet.Name Then
             worksheetExists = True
             Exit Function

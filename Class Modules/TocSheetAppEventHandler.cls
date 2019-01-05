@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "IndexSheetAppEventHandler"
+Attribute VB_Name = "TocSheetAppEventHandler"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -13,15 +13,15 @@ Option Explicit
 Private WithEvents AppEvent As Application
 Attribute AppEvent.VB_VarHelpID = -1
 
-'handles changes in the index sheet (update custom properties if edited manually)
+'handles changes in the Toc sheet (update custom properties if edited manually)
 Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     
     'not a worksheet?
     If Not TypeOf Sh Is Worksheet Then Exit Sub
-    'not index page?
-    If Sh.Name <> getIndexSheetName() Then Exit Sub
+    'not Toc page?
+    If Sh.Name <> getTocSheetName() Then Exit Sub
     'is there already a table? If not -> just exit sub
-    If Sh.ListObjects.Count = 0 Then Exit Sub
+    If Sh.ListObjects.count = 0 Then Exit Sub
     
     If isF5 Then Exit Sub
     
@@ -31,16 +31,16 @@ Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     Dim arrCusProp As Variant
     Dim newCusProp As String
     
-    arrIdxCols = getIndexColumns()
-    arrCusProp = getIndexCustomProperties()
+    arrIdxCols = getTocColumns()
+    arrCusProp = getTocCustomProperties()
         
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
      
-    'not in table-area (updated cell) and (number of table-columns is equal index-arry)
-    If Intersect(Target, Sh.Range(Sh.ListObjects(1).Range.Address)) Is Nothing And Sh.ListObjects(1).ListColumns.Count = UBound(arrIdxCols) + 1 Then Exit Sub
+    'not in table-area (updated cell) and (number of table-columns is equal Toc-arry)
+    If Intersect(Target, Sh.Range(Sh.ListObjects(1).Range.Address)) Is Nothing And Sh.ListObjects(1).ListColumns.count = UBound(arrIdxCols) + 1 Then Exit Sub
             
-    'delete index props in available sheets
+    'delete Toc props in available sheets
     Dim rw As Range
     Dim vl As Variant
     For Each rw In Sh.ListObjects(1).Range.Rows
@@ -54,7 +54,7 @@ Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     Dim x As Integer
     x = 0
     'resize
-    ReDim arrIdxCols(Sh.ListObjects(1).HeaderRowRange.Cells.Count - 1)
+    ReDim arrIdxCols(Sh.ListObjects(1).HeaderRowRange.Cells.count - 1)
     'Loop through each cell in Range and store value in Array
     For Each rw In Sh.ListObjects(1).HeaderRowRange.Cells
       arrIdxCols(x) = rw.Value
@@ -81,8 +81,8 @@ For Each vl In arrCusProp
     If inArray(vl, arrIdxCols) Then
         newCusProp = newCusProp + CStr(vl) + ";"
     Else
-        If Not inArray(vl, arrIdxCols) And inArray(vl, getIndexColumns()) Then
-            x = getIndexInArray(vl, getIndexColumns())
+        If Not inArray(vl, arrIdxCols) And inArray(vl, getTocColumns()) Then
+            x = getTocInArray(vl, getTocColumns())
             If x > -1 And x <= UBound(arrIdxCols) Then newCusProp = newCusProp + arrIdxCols(x) + ";"
         Else
             newCusProp = newCusProp + CStr(vl) + ";"
@@ -93,8 +93,8 @@ Next vl
 
 If Right(newCusProp, 1) = ";" Then newCusProp = Left(newCusProp, Len(newCusProp) - 1)
 
-setProperty Sh, "IndexColumns", Join(arrIdxCols, ";")
-setProperty Sh, "IndexCustomProperties", newCusProp
+setProperty Sh, "TocColumns", Join(arrIdxCols, ";")
+setProperty Sh, "TocCustomProperties", newCusProp
 
 
 Application.ScreenUpdating = True
@@ -108,20 +108,20 @@ Public Sub Class_Initialize()
 End Sub
 
 ' New WorkBook added in Application: with it also the first WorkSheet was created
-Private Sub AppEvent_NewWorkbook(ByVal wb As Workbook)
+Private Sub AppEvent_NewWorkbook(ByVal WB As Workbook)
     Dim cPrpNm As String
     cPrpNm = getWorksheetCreatedDatePropName()
     
    'set a custom property for the first worksheet
    If cPrpNm <> "" Then
-     setProperty wb.Sheets(1), cPrpNm, Now
+     setProperty WB.Sheets(1), cPrpNm, Now
    End If
    
-   setProperty wb.Sheets(1), "isIndex", "0"
+   setProperty WB.Sheets(1), "isToc", "0"
 End Sub
 
 ' new WorkSheet added
-Private Sub AppEvent_WorkbookNewSheet(ByVal wb As Workbook, ByVal Sh As Object)
+Private Sub AppEvent_WorkbookNewSheet(ByVal WB As Workbook, ByVal Sh As Object)
 If Not TypeOf Sh Is Worksheet Then Exit Sub
 Dim cPrpNm As String
 cPrpNm = getWorksheetCreatedDatePropName()
@@ -131,10 +131,10 @@ cPrpNm = getWorksheetCreatedDatePropName()
     setProperty Sh, cPrpNm, Now
    End If
    
-   setProperty Sh, "isIndex", "0"
+   setProperty Sh, "isToc", "0"
    
-    If worksheetExists(wb, getIndexSheetName()) Then
-        Call generateIndexWorksheet
+    If worksheetExists(WB, getTocSheetName()) Then
+        Call generateTocWorksheet
     End If
     
 End Sub
@@ -148,12 +148,12 @@ Private Sub AppEvent_SheetActivate(ByVal Sh As Object)
     
     'call just once
     Dim idx As String
-    idx = getIndexSheetName()
+    idx = getTocSheetName()
     
     'there is no sheet for table of contents?
     If Not worksheetExists(Sh.Parent, idx) Then Exit Sub
     
     If Sh.Name = idx Then
-     Call generateIndexWorksheet
-    End If         
+     Call generateTocWorksheet
+    End If
 End Sub

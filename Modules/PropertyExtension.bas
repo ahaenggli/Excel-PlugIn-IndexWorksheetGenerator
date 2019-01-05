@@ -49,9 +49,9 @@ getPropId = id
 End Function
 
 'rename and overwrite property
-Public Sub propertyRename(wb As Workbook, propNameOld As String, propNameNew As String)
+Public Sub propertyRename(WB As Workbook, propNameOld As String, propNameNew As String)
     Dim ws As Worksheet
-    For Each ws In wb.Worksheets
+    For Each ws In WB.Worksheets
         Call setProperty(ws, propNameNew, getProperty(ws, propNameOld))
         Call setProperty(ws, propNameOld, "")
     Next ws

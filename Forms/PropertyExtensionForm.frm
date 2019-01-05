@@ -33,14 +33,14 @@ End Sub
 
 Private Sub btnConfig_Click()
     Call cbProperty_Change
-    IndexSheetExtensionForm.Show
+    TocSheetExtensionForm.Show
     Unload Me
 End Sub
 
 'handles click on btnOK
 Private Sub btnOk_Click()
     setProperty ws, Me.cbProperty.Text, Me.txtValue.Text
-    Call generateIndexWorksheet
+    Call generateTocWorksheet
     Unload Me
 End Sub
 
@@ -84,21 +84,21 @@ Private Sub UserForm_Activate()
     
     'add existising properties to combobox.list
     For Each xx In ws.CustomProperties
-      If xx.Name <> "isIndex" Then Me.cbProperty.AddItem xx.Name
+      If xx.Name <> "isToc" Then Me.cbProperty.AddItem xx.Name
     Next xx
     
     'add default properties to combobox.list (if they are not already set)
-    For Each tmp In getIndexCustomProperties()
-        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
+    For Each tmp In getTocCustomProperties()
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isToc" And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
-    'add index properties to combobox.list (if they are not already set)
-    For Each tmp In getIndexColumns()
-        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isIndex" And tmp <> getIndexColumns(0) And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
+    'add toc properties to combobox.list (if they are not already set)
+    For Each tmp In getTocColumns()
+        If isInList(Me.cbProperty, CStr(tmp)) = False And tmp <> "isToc" And tmp <> getTocColumns(0) And CStr(tmp) <> "" Then Me.cbProperty.AddItem CStr(tmp)
     Next tmp
     
     'default property is first one defined
-    Me.cbProperty.Text = CStr(getIndexCustomProperties(0))
+    Me.cbProperty.Text = CStr(getTocCustomProperties(0))
     
     'caption of form (sheet/workbook in it)
     Me.Caption = "Edit custom properties of [" & ws.Parent.Name & "].[" & ws.Name & "]"

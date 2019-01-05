@@ -1,4 +1,4 @@
-Attribute VB_Name = "IndexSheetExtension"
+Attribute VB_Name = "TocSheetExtension"
 Option Explicit
 Public isF5 As Boolean
 
@@ -7,10 +7,10 @@ Public Sub handleF5Click()
     If ActiveWorkbook Is Nothing Then Exit Sub
     
     isF5 = True
-    If ActiveWorkbook.ActiveSheet.Name <> getIndexSheetName() Then
+    If ActiveWorkbook.ActiveSheet.Name <> getTocSheetName() Then
         Call ShowPropEditForm
     Else
-        Call generateIndexWorksheet
+        Call generateTocWorksheet
     End If
     isF5 = False
 End Sub
@@ -21,7 +21,7 @@ Public Function getWorksheetCreatedDatePropName() As String
     prop = ""
     
     On Error Resume Next
-    If prop = "" Then prop = isNull(getProperty(getIndexSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName"))
+    If prop = "" Then prop = isNull(getProperty(getTocSheet(), "WorksheetCreatedDatePropName"), getProperty(ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName"))
     If prop = "" And isGermanGUI() Then prop = "Datum"
     If prop = "" And Not isGermanGUI() Then prop = "Created"
 
@@ -34,13 +34,13 @@ Public Function getWorksheetCreatedDatePropName() As String
     getWorksheetCreatedDatePropName = prop
 End Function
 
-'get name of properties which are shown in the index sheet
-Public Function getIndexColumns() As Variant
+'get name of properties which are shown in the Toc sheet
+Public Function getTocColumns() As Variant
     Dim props As String
     props = ""
     
     On Error Resume Next
-    If props = "" Then props = isNull(getProperty(getIndexSheet(), "IndexColumns"), getProperty(ThisWorkbook.Worksheets(1), "IndexColumns"))
+    If props = "" Then props = isNull(getProperty(getTocSheet(), "TocColumns"), getProperty(ThisWorkbook.Worksheets(1), "TocColumns"))
     If props = "" And isGermanGUI() Then props = "Blatt;Datum;Beschreibung;Verantwortlich;ToDo;Status;Info"
     If props = "" And Not isGermanGUI() Then props = "Worksheet;Created;Description;Responsible;ToDo;Status;Info"
 
@@ -51,20 +51,20 @@ Public Function getIndexColumns() As Variant
     On Error GoTo 0
             
     'first column has to be for the hyperlink to the other worksheets, first array entry should not be an existing custom property
-    If (inArray(Split(props, ";")(0), getIndexCustomProperties()) Or Split(props, ";")(0) = getWorksheetCreatedDatePropName()) Then
+    If (inArray(Split(props, ";")(0), getTocCustomProperties()) Or Split(props, ";")(0) = getWorksheetCreatedDatePropName()) Then
         props = ";" & props
     End If
     
-    getIndexColumns = Split(props, ";")
+    getTocColumns = Split(props, ";")
 End Function
 
 'get name of custom proprties which should be created in all worksheets
-Public Function getIndexCustomProperties() As Variant
+Public Function getTocCustomProperties() As Variant
     Dim props As String
     props = ""
     
     On Error Resume Next
-    If props = "" Then props = isNull(getProperty(getIndexSheet(), "IndexCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "IndexCustomProperties"))
+    If props = "" Then props = isNull(getProperty(getTocSheet(), "TocCustomProperties"), getProperty(ThisWorkbook.Worksheets(1), "TocCustomProperties"))
     If props = "" And isGermanGUI() Then props = "Beschreibung;Verantwortlich;ToDo;Status;Info;Datum"
     If props = "" And Not isGermanGUI() Then props = "Description;Responsible;ToDo;Status;Info;Created"
     
@@ -74,60 +74,60 @@ Public Function getIndexCustomProperties() As Variant
     End If
     On Error GoTo 0
     
-    getIndexCustomProperties = Split(props, ";")
+    getTocCustomProperties = Split(props, ";")
 End Function
 
-'set flag for index sheet
-Public Sub setIndexSheetFlag(ws As Worksheet)
+'set flag for Toc sheet
+Public Sub setTocSheetFlag(ws As Worksheet)
     Dim Sheet As Worksheet
 
     For Each Sheet In ActiveWorkbook.Worksheets
-        setProperty Sheet, "isIndex", "0"
+        setProperty Sheet, "isToc", "0"
     Next Sheet
 
-    setProperty ws, "isIndex", "1"
+    setProperty ws, "isToc", "1"
 End Sub
 
-'get the defined name for the index worksheet
-Public Function getIndexSheetName() As String
+'get the defined name for the Toc worksheet
+Public Function getTocSheetName() As String
     Dim ws As Worksheet
     Dim sumsheet As String
     sumsheet = ""
     
     For Each ws In ActiveWorkbook.Worksheets
-        If (getProperty(ws, "isIndex") = "1") Then
+        If (getProperty(ws, "isToc") = "1") Then
             sumsheet = ws.Name
             Exit For
         End If
     Next ws
     
     On Error Resume Next
-    If sumsheet = "" Then sumsheet = getProperty(ThisWorkbook.Worksheets(1), "IndexWorksheetName")
+    If sumsheet = "" Then sumsheet = getProperty(ThisWorkbook.Worksheets(1), "TocWorksheetName")
     If sumsheet = "" And isGermanGUI() Then sumsheet = "Uebersicht"
-    If sumsheet = "" And Not isGermanGUI() Then sumsheet = "Index"
+    If sumsheet = "" And Not isGermanGUI() Then sumsheet = "Toc"
                
     If Err.Number > 0 Then
-        sumsheet = "Index"
+        sumsheet = "Toc"
         Err.Clear
     End If
     On Error GoTo 0
     
-    getIndexSheetName = sumsheet
+    getTocSheetName = sumsheet
 End Function
 
-'returns ref to index sheet if exists, else nothing
-Public Function getIndexSheet() As Worksheet
+'returns ref to Toc sheet if exists, else nothing
+Public Function getTocSheet() As Worksheet
     Dim idx As String
-    idx = getIndexSheetName()
+    idx = getTocSheetName()
     If worksheetExists(ActiveWorkbook, idx) Then
-        Set getIndexSheet = ActiveWorkbook.Worksheets(idx)
+        Set getTocSheet = ActiveWorkbook.Worksheets(idx)
     Else
-        Set getIndexSheet = Nothing
+        Set getTocSheet = Nothing
     End If
 End Function
 
 'genereates new sheet for overview
-Public Sub generateIndexWorksheet()
+Public Sub generateTocWorksheet()
     Dim Sh As Worksheet
     Dim Newsh As Worksheet
     
@@ -138,8 +138,8 @@ Public Sub generateIndexWorksheet()
     Dim col As Variant
     
     Dim TableStyle As String
-    Dim IndexSheetName As String
-    Dim IndexColumns As Variant
+    Dim TocSheetName As String
+    Dim TocColumns As Variant
     
     With Application
         .Calculation = xlCalculationManual
@@ -150,18 +150,18 @@ Public Sub generateIndexWorksheet()
     Set Basebook = ActiveWorkbook
     Set Basesheet = ActiveWorkbook.ActiveSheet
     
-    IndexSheetName = getIndexSheetName()
-    IndexColumns = getIndexColumns()
+    TocSheetName = getTocSheetName()
+    TocColumns = getTocColumns()
     
-    If Not worksheetExists(ActiveWorkbook, IndexSheetName) Then
-        'Add a worksheet with the name "Index-Sheet"
+    If Not worksheetExists(ActiveWorkbook, TocSheetName) Then
+        'Add a worksheet with the name "Toc-Sheet"
         Set Newsh = Basebook.Worksheets.Add(Before:=Basebook.Worksheets(1))
-        Newsh.Name = IndexSheetName
+        Newsh.Name = TocSheetName
      Else
-        Set Newsh = Basebook.Worksheets(IndexSheetName)
+        Set Newsh = Basebook.Worksheets(TocSheetName)
     End If
     
-    If Newsh.ListObjects.Count > 0 Then
+    If Newsh.ListObjects.count > 0 Then
         TableStyle = Newsh.ListObjects(1).TableStyle
         Newsh.ListObjects(1).Delete
     End If
@@ -170,13 +170,13 @@ Public Sub generateIndexWorksheet()
     Newsh.Cells.Delete
 
     
-    Call setIndexSheetFlag(Newsh)
+    Call setTocSheetFlag(Newsh)
         
     Application.DisplayAlerts = True
   
     'Add headers
-    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(IndexColumns)))
-        .Value = IndexColumns
+    With Newsh.Range(Newsh.Cells(1, 1), Newsh.Cells(1, 1 + UBound(TocColumns)))
+        .Value = TocColumns
         .Font.Bold = True
         .Font.Size = 12
     End With
@@ -192,8 +192,8 @@ Public Sub generateIndexWorksheet()
             'Create a link to the sheet in the A column
             Newsh.Hyperlinks.Add Anchor:=Newsh.Cells(RwNum, 1), Address:="", SubAddress:="'" & Sh.Name & "'!A1", ScreenTip:="", TextToDisplay:=Sh.Name
 
-            For Each col In IndexColumns
-                If CStr(col) <> "" And CStr(col) <> CStr(IndexColumns(0)) Then
+            For Each col In TocColumns
+                If CStr(col) <> "" And CStr(col) <> CStr(TocColumns(0)) Then
                     ColNum = ColNum + 1
                     Newsh.Cells(RwNum, ColNum) = getProperty(Sh, CStr(col))
                 End If
@@ -208,7 +208,7 @@ Public Sub generateIndexWorksheet()
     Set rng = Newsh.UsedRange
     Set tbl = Newsh.ListObjects.Add(xlSrcRange, rng, , xlYes)
     tbl.TableStyle = isNull(TableStyle, "TableStyleMedium15")
-    tbl.Name = IndexSheetName
+    tbl.Name = TocSheetName
     With rng
      With .Borders(xlEdgeBottom)
             .LineStyle = xlContinuous
