@@ -15,16 +15,24 @@ Attribute AppEvent.VB_VarHelpID = -1
 
 'handles changes in the Toc sheet (update custom properties if edited manually)
 Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
+On Error GoTo Hoppla
+    'called from toc handler
+    If isF5 Then Exit Sub
+    'error...
+    If Sh Is Nothing Then Exit Sub
     
     'not a worksheet?
     If Not TypeOf Sh Is Worksheet Then Exit Sub
-    'not Toc page?
-    If Sh.Name <> getTocSheetName() Then Exit Sub
+    
+    'parent not a workbook
+    If Not TypeOf Sh.Parent Is Workbook Then Exit Sub
+        
     'is there already a table? If not -> just exit sub
     If Sh.ListObjects.count = 0 Then Exit Sub
     
-    If isF5 Then Exit Sub
-    
+    'not Toc page? (last check because in worstcase it iterates all worksheets)
+    If Sh.Name <> getTocSheetName() Then Exit Sub
+        
     Dim cl As Range
     
     Dim arrIdxCols As Variant
@@ -73,7 +81,7 @@ Private Sub AppEvent_SheetChange(ByVal Sh As Object, ByVal Target As Range)
                     End If
     
 Skip:
-                On Error GoTo 0
+                On Error GoTo Hoppla
             Next cl
             
 
@@ -96,19 +104,23 @@ If Right(newCusProp, 1) = ";" Then newCusProp = Left(newCusProp, Len(newCusProp)
 setProperty Sh, "TocColumns", Join(arrIdxCols, ";")
 setProperty Sh, "TocCustomProperties", newCusProp
 
-
+Hoppla:
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
 
 'constructor:
 Public Sub Class_Initialize()
+On Error GoTo Hoppla
     'bind events from "Application" to this class var "AppEvent"
     Set AppEvent = Application
+Hoppla:
 End Sub
 
 ' New WorkBook added in Application: with it also the first WorkSheet was created
 Private Sub AppEvent_NewWorkbook(ByVal WB As Workbook)
+On Error GoTo Hoppla
+    
     Dim cPrpNm As String
     cPrpNm = getWorksheetCreatedDatePropName()
     
@@ -118,10 +130,14 @@ Private Sub AppEvent_NewWorkbook(ByVal WB As Workbook)
    End If
    
    setProperty WB.Sheets(1), "isToc", "0"
+
+Hoppla:
+
 End Sub
 
 ' new WorkSheet added
 Private Sub AppEvent_WorkbookNewSheet(ByVal WB As Workbook, ByVal Sh As Object)
+On Error GoTo Hoppla
 If Not TypeOf Sh Is Worksheet Then Exit Sub
 Dim cPrpNm As String
 cPrpNm = getWorksheetCreatedDatePropName()
@@ -136,11 +152,12 @@ cPrpNm = getWorksheetCreatedDatePropName()
     If worksheetExists(WB, getTocSheetName()) Then
         Call generateTocWorksheet
     End If
-    
+Hoppla:
 End Sub
 
 'refresh table of contents sheet if activated
 Private Sub AppEvent_SheetActivate(ByVal Sh As Object)
+On Error GoTo Hoppla
     'not a worksheet?
     If Not TypeOf Sh Is Worksheet Then Exit Sub
     'not a workbook?
@@ -152,8 +169,9 @@ Private Sub AppEvent_SheetActivate(ByVal Sh As Object)
     
     'there is no sheet for table of contents?
     If Not worksheetExists(Sh.Parent, idx) Then Exit Sub
-    
+   
     If Sh.Name = idx Then
      Call generateTocWorksheet
     End If
+Hoppla:
 End Sub

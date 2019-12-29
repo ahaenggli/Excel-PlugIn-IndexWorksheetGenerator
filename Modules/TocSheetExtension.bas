@@ -15,6 +15,26 @@ Public Sub handleF5Click()
     isF5 = False
 End Sub
 
+'get the name for the global toc handler (default: F5) (custom property)
+Public Function getGlobalTocHandlerPropName() As String
+    Dim prop As String
+    prop = ""
+    
+    On Error Resume Next
+    ' only global possible
+    If prop = "" Then prop = getProperty(ThisWorkbook.Worksheets(1), "GlobalTocHandlerPropName")
+    If prop = "" Then prop = "{F5}"
+
+    If Err.Number > 0 Then
+        prop = "{F5}"
+        Err.Clear
+    End If
+    On Error GoTo 0
+    
+    getGlobalTocHandlerPropName = prop
+End Function
+
+
 'get the name for the worksheet created field (custom property)
 Public Function getWorksheetCreatedDatePropName() As String
     Dim prop As String

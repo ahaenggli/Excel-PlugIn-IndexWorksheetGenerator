@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} TocSheetExtensionForm 
    Caption         =   "edit custom values for index sheet"
-   ClientHeight    =   3420
+   ClientHeight    =   4590
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   6555
+   ClientWidth     =   6435
    OleObjectBlob   =   "TocSheetExtensionForm.frx":0000
    StartUpPosition =   1  'Fenstermitte
 End
@@ -28,7 +28,8 @@ Private Sub UserForm_Activate()
     txtProperties.Text = Join(getTocCustomProperties(), ";")
     txtSummaryColumns.Text = Join(getTocColumns(), ";")
     txtWorkSheetCreatedDate.Text = getWorksheetCreatedDatePropName()
-        
+    txtCallToc.Text = getGlobalTocHandlerPropName()
+    
      If Not worksheetExists(ActiveWorkbook, getTocSheetName()) Then
         Me.cbSetDefault.Value = True
      End If
@@ -39,18 +40,19 @@ Private Sub saveSettings()
     If Not worksheetExists(ActiveWorkbook, getTocSheetName()) And Me.cbSetDefault.Value = False Then
         Call generateTocWorksheet
     End If
-
-    If worksheetExists(ActiveWorkbook, getTocSheetName()) Then
-    setProperty ActiveWorkbook.Worksheets(1), "TocWorksheetName", txtSumTitel.Text
-    setProperty ActiveWorkbook.Worksheets(1), "TocCustomProperties", txtProperties.Text
-    setProperty ActiveWorkbook.Worksheets(1), "TocColumns", txtSummaryColumns.Text
-    setProperty ActiveWorkbook.Worksheets(1), "WorksheetCreatedDatePropName", txtWorkSheetCreatedDate.Text
+    
+    If worksheetExists(ActiveWorkbook, getTocSheetName()) And Me.cbSetDefault.Value = False Then
+        If txtSumTitel.Text <> "" Then setProperty ActiveWorkbook.Worksheets(1), "TocWorksheetName", txtSumTitel.Text
+        If txtProperties.Text <> "" Then setProperty ActiveWorkbook.Worksheets(1), "TocCustomProperties", txtProperties.Text
+        If txtSummaryColumns.Text <> "" Then setProperty ActiveWorkbook.Worksheets(1), "TocColumns", txtSummaryColumns.Text
         
-    On Error Resume Next
-    Application.DisplayAlerts = False
-    ActiveWorkbook.Save
-    Application.DisplayAlerts = True
-    On Error GoTo 0
+        setProperty ActiveWorkbook.Worksheets(1), "WorksheetCreatedDatePropName", txtWorkSheetCreatedDate.Text
+            
+        On Error Resume Next
+            Application.DisplayAlerts = False
+            ActiveWorkbook.Save
+            Application.DisplayAlerts = True
+        On Error GoTo 0
     End If
     
     If Me.cbSetDefault.Value = True Then
@@ -59,11 +61,17 @@ Private Sub saveSettings()
     ' -> ThisWorkbook is where the code is saved (xlam-file)
     ' -> even a xlam file has at least one sheet
     ' -> here it's named "TocConfig"
-    setProperty ThisWorkbook.Worksheets(1), "TocWorksheetName", txtSumTitel.Text
-    setProperty ThisWorkbook.Worksheets(1), "TocCustomProperties", txtProperties.Text
-    setProperty ThisWorkbook.Worksheets(1), "TocColumns", txtSummaryColumns.Text
-    setProperty ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName", txtWorkSheetCreatedDate.Text
+    If txtSumTitel.Text <> "" And txtSumTitel.Text <> getTocSheetName() Then setProperty ThisWorkbook.Worksheets(1), "TocWorksheetName", txtSumTitel.Text
+    If txtProperties.Text <> "" And txtProperties.Text <> Join(getTocCustomProperties(), ";") Then setProperty ThisWorkbook.Worksheets(1), "TocCustomProperties", txtProperties.Text
+    If txtSummaryColumns.Text <> "" And txtSummaryColumns.Text <> Join(getTocColumns(), ";") Then setProperty ThisWorkbook.Worksheets(1), "TocColumns", txtSummaryColumns.Text
+    If txtWorkSheetCreatedDate.Text <> getWorksheetCreatedDatePropName() Then setProperty ThisWorkbook.Worksheets(1), "WorksheetCreatedDatePropName", txtWorkSheetCreatedDate.Text
         
+    If txtCallToc.Text <> "" And txtCallToc.Text <> getGlobalTocHandlerPropName() Then
+        Application.OnKey getGlobalTocHandlerPropName()
+        setProperty ThisWorkbook.Worksheets(1), "GlobalTocHandlerPropName", txtCallToc.Text
+        Application.OnKey getGlobalTocHandlerPropName(), "handleF5Click"
+    End If
+    
     On Error Resume Next
     Application.DisplayAlerts = False
     ThisWorkbook.Save
