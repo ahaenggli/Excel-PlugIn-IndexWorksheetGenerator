@@ -4,7 +4,15 @@ Im Verzeichnis werden sämtliche sichtbaren Register aufgeführt und sind direkt
 Die Standard-Einstellungen lassen sich via F5 > Button "config" einsehen und editieren.
 
 ## Wie installiere ich ein Excel-Add-In?
-https://support.office.com/de-de/article/add-or-remove-add-in-in-excel-0af570c4-5cf3-4fa9-9b88-403625a0b460
+PowerShell: 
+```PowerShell
+Invoke-WebRequest "https://github.com/ahaenggli/Excel-PlugIn-TableOfContents/releases/latest/download/TableOfContentsWorksheetGenerator.xlam" -OutFile $env:APPDATA"\Microsoft\AddIns\TableOfContentsWorksheetGenerator.xlam"
+$xl=New-Object -ComObject excel.application
+$xl.Application.AddIns | ?{$_.Name -eq 'TableOfContentsWorksheetGenerator.xlam'} | %{$_.Installed=$true}
+$xl.Quit()
+```
+Manuell in Excel:  
+https://support.office.com/de-de/article/add-or-remove-add-in-in-excel-0af570c4-5cf3-4fa9-9b88-403625a0b460  
 
 ## Wie kann ich das Inhaltsverzeichnis erstellen?
 Einfach die F5-Taste anklicken.
@@ -31,6 +39,14 @@ Optionally, further attributes such as description, date of creation, status, an
 The default settings can be viewed and edited via F5 > "config"-button.
 
 ## How to install an Excel add-in
+PowerShell: 
+```PowerShell
+Invoke-WebRequest "https://github.com/ahaenggli/Excel-PlugIn-TableOfContents/releases/latest/download/TableOfContentsWorksheetGenerator.xlam" -OutFile $env:APPDATA"\Microsoft\AddIns\TableOfContentsWorksheetGenerator.xlam"
+$xl=New-Object -ComObject excel.application
+$xl.Application.AddIns | ?{$_.Name -eq 'TableOfContentsWorksheetGenerator.xlam'} | %{$_.Installed=$true}
+$xl.Quit()
+```
+Excel:  
 https://support.office.com/en-us/article/add-or-remove-add-ins-in-excel-0af570c4-5cf3-4fa9-9b88-403625a0b460
 
 ## How can I generate the table of contents worksheet?
